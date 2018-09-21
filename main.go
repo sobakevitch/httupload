@@ -73,13 +73,13 @@ func getAddrFromIfaceName(iface string) string {
 		ief, err := net.InterfaceByName(iface)
 		if err != nil {
 			log.Fatal(err)
-			log.Printf("Interface %s not found\n")
+			log.Printf("Interface %s not found\n", iface)
 			os.Exit(1)
 		}
 		addrs, err := ief.Addrs()
 		if err != nil {
 			log.Fatal(err)
-			log.Printf("Error retrieving address for %s interface\n")
+			log.Printf("Error retrieving address for %s interface\n", iface)
 			os.Exit(2)
 		}
 		addr = strings.Split(addrs[0].String(), "/")[0]
