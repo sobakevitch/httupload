@@ -64,11 +64,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getAddrFromIfaceName(iface string) string {
-	var addr string
+func getIPFromIfaceName(iface string) net.IP {
+	var result net.IP
 
 	if iface == "any" {
-		addr = "0.0.0.0"
+		result = net.ParseIP("0.0.0.0")
 	} else {
 		ief, err := net.InterfaceByName(iface)
 		if err != nil {
@@ -82,9 +82,21 @@ func getAddrFromIfaceName(iface string) string {
 			log.Printf("Error retrieving address for %s interface\n", iface)
 			os.Exit(2)
 		}
-		addr = strings.Split(addrs[0].String(), "/")[0]
+		// Retrieving the first IPv4 or IPv6 address
+		for k := range addrs {
+			s := strings.Split(addrs[k].String(), "/")[0]
+			ip := net.ParseIP(s)
+			if ip.To4() != nil { // IPv4 address
+				result = ip
+				break
+			}
+		}
+		if result == nil {
+			log.Printf("Error retrieving a valid IPv4 address for %s interface\n", iface)
+			os.Exit(3)
+		}
 	}
-	return addr
+	return result
 }
 
 func init() {
@@ -95,7 +107,7 @@ func init() {
 }
 
 func main() {
-	localAddr := getAddrFromIfaceName(netIface)
+	localAddr := getIPFromIfaceName(netIface)
 	bindValue := fmt.Sprintf("%s:%d", localAddr, localPort)
 	log.Printf("Listen to %s\n", bindValue)
 	var err error
